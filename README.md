@@ -8,6 +8,8 @@ Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, 
 - **En bas** : la glycémie et sa tendance, fournies par Juggluco (par exemple avec un FreeStyle Libre 2 connecté directement à la montre).
 - **À 9 h** : la fréquence cardiaque, mesurée toutes les 5 minutes.
 - **À 3 h** : la date, dans un guichet.
+- **Sous 12 h** : la batterie de la montre en %, en rouge à 15 % et moins.
+- **Au-dessus de 6 h** : les pas du jour.
 - Une trotteuse rouge, masquée quand l'écran est en veille.
 
 Les deux applis qui accompagnent le cadran ont aussi leurs propres fonctions :
@@ -41,7 +43,8 @@ Chaque complication marche aussi sur d'autres cadrans, et le cadran accepte d'au
 Les trois complications sont choisies automatiquement quand le cadran est ajouté. Sinon, faites un appui long sur le cadran, puis **Personnaliser** :
 - en haut, **Heure solaire** ;
 - en bas, **Juggluco**, complication « valeur + flèche » en texte court ;
-- à gauche, **Pouls → Fréquence cardiaque**.
+- à gauche, **Pouls → Fréquence cardiaque** ;
+- en bas, sous la glycémie, le podomètre : celui du système par défaut, ou **Google Fit → Pas** pour avoir le même compte que dans Fit.
 
 > **Mise à jour** : les APK de la CI sont signés avec une clé de debug qui change à chaque compilation. Pour installer une nouvelle version, désinstallez d'abord l'ancienne :
 > `adb shell pm uninstall io.github.mariechantal.heuresolaire` (et de même pour `io.github.mariechantal.pouls` et `io.github.mariechantal.cadransolaire`).

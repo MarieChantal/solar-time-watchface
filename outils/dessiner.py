@@ -104,6 +104,9 @@ except OSError:
     font_hr = font_small
 d.text((83, 202), "♥", font=font_small, fill=(230, 70, 60), anchor="mm")
 d.text((83, 236), "68", font=font_hr, fill=(255, 255, 255), anchor="mm")
+# Batterie en haut, pas en bas
+d.text((C, 80), "85 %", font=font_small, fill=(200, 200, 200), anchor="mm")
+d.text((C, 372), "5 432 pas", font=font_small, fill=(200, 200, 200), anchor="mm")
 for name, angle in (("aiguille_heure", 304), ("aiguille_minute", 51), ("trotteuse", 192)):
     w, h, p = HANDS[name]
     hand = imgs[name]
