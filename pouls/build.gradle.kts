@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.mariechantal.pouls"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -22,4 +22,5 @@ android {
 
 dependencies {
     implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.1")
+    implementation("androidx.core:core-ktx:1.13.1")
 }

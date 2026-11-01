@@ -110,6 +110,7 @@ class HeartRateService : SuspendingComplicationDataSourceService() {
         private fun save(context: Context, bpm: Int) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putInt("bpm", bpm).putLong("at", System.currentTimeMillis()).apply()
+            Historique.get(context).ajouter(System.currentTimeMillis(), bpm)
         }
 
         fun tapIntent(context: Context): PendingIntent = PendingIntent.getActivity(

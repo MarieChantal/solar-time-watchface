@@ -36,6 +36,12 @@ class PoulsActivity : Activity() {
                 setPadding(32, 48, 32, 64)
                 addView(info)
                 addView(button)
+                addView(Button(this@PoulsActivity).apply {
+                    text = "Historique"
+                    setOnClickListener {
+                        startActivity(android.content.Intent(this@PoulsActivity, HistoriqueActivity::class.java))
+                    }
+                })
             })
         })
     }
