@@ -63,7 +63,7 @@ Dans l'appli Heure solaire, touchez « Réveil solaire » et choisissez la duré
 coucher = minuit solaire − durée / 2        lever = minuit solaire + durée / 2
 ```
 
-Avec 8 h de sommeil, on se couche à 20:00 et on se lève à 04:00 en heure solaire, soit 20:50 et 04:50 en heure légale à Rennes en novembre, ou 22:07 et 06:07 en juillet.
+Avec 8 h de sommeil, on se couche à 20:00 et on se lève à 04:00 en heure solaire, soit 20:50 et 04:50 en heure légale à Rennes en novembre, ou 22:13 et 06:13 à la mi-juillet.
 
 - Une vibration et une notification préviennent 15 minutes avant le coucher.
 - Au lever, la montre sonne et/ou vibre (deux réglages indépendants) jusqu'à ce que vous touchiez « Je suis debout ». Il n'y a pas de répétition. La sonnerie s'arrête d'elle-même au bout de 10 minutes.
