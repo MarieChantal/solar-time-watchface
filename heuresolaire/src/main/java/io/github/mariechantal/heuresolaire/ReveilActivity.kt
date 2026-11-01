@@ -29,7 +29,7 @@ class ReveilActivity : Activity() {
         val r = Reveil.reglages(this)
 
         resume = TextView(this).apply { gravity = Gravity.CENTER; textSize = 14f }
-        duree = TextView(this).apply { gravity = Gravity.CENTER; textSize = 20f; minEms = 3 }
+        duree = TextView(this).apply { gravity = Gravity.CENTER; textSize = 20f }
         actif = Switch(this).apply { text = "Réveil"; isChecked = r.actif }
         vibreur = Switch(this).apply { text = "Vibreur"; isChecked = r.vibreur }
         son = Switch(this).apply { text = "Son"; isChecked = r.son }
@@ -52,12 +52,17 @@ class ReveilActivity : Activity() {
                 addView(TextView(this@ReveilActivity).apply {
                     gravity = Gravity.CENTER; textSize = 12f; text = "Durée de sommeil"
                 })
+                // Trois parts égales : le style des boutons Wear est très large par défaut,
+                // ce qui poussait « + » hors de l'écran.
                 addView(LinearLayout(this@ReveilActivity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER
-                    addView(moins)
-                    addView(duree)
-                    addView(plus)
+                    val part = { LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) }
+                    moins.minWidth = 0; moins.minimumWidth = 0
+                    plus.minWidth = 0; plus.minimumWidth = 0
+                    addView(moins, part())
+                    addView(duree, part())
+                    addView(plus, part())
                 })
                 addView(resume)
                 addView(actif)
@@ -93,9 +98,11 @@ class ReveilActivity : Activity() {
             val demi = (heures * 30).toLong()
             buildString {
                 appendLine("Minuit solaire : ${Reveil.hhmm(nuit.minuit)}")
-                appendLine("Coucher : ${Reveil.hhmm(nuit.coucher)} (☀ ${Reveil.hhmmSolaire(-demi)})")
+                appendLine("Coucher : ${Reveil.hhmm(nuit.coucher)}")
+                appendLine("☀ ${Reveil.hhmmSolaire(-demi)} solaire")
                 appendLine("Rappel : ${Reveil.hhmm(nuit.rappel)}")
-                appendLine("Lever : ${Reveil.hhmm(nuit.lever)} (☀ ${Reveil.hhmmSolaire(demi)})")
+                appendLine("Lever : ${Reveil.hhmm(nuit.lever)}")
+                appendLine("☀ ${Reveil.hhmmSolaire(demi)} solaire")
                 if (r.actif && !r.son && !r.vibreur) appendLine("Ni son ni vibreur : l'écran s'allumera seulement.")
             }
         }
