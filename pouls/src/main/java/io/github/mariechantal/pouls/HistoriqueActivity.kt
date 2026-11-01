@@ -1,20 +1,26 @@
 package io.github.mariechantal.pouls
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.Intent
+import android.Manifest
+import android.app.AlertDialog
+import android.bluetooth.BluetoothClass
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.core.content.FileProvider
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 /**
  * Historique de la fréquence cardiaque : courbe sur 24 h, 7 jours ou 30 jours (toucher la courbe
- * pour changer de période), minimum, maximum et moyenne, et export CSV vers le téléphone.
+ * pour changer de période), minimum, maximum et moyenne, et envoi du CSV au téléphone par Bluetooth.
  */
 class HistoriqueActivity : Activity() {
 
@@ -83,27 +89,62 @@ class HistoriqueActivity : Activity() {
         }
     }
 
-    /** Écrit le CSV et ouvre le partage Android : choisir « Bluetooth » pour l'envoyer au téléphone. */
+    /** Demande l'accès Bluetooth si besoin, puis choisit le téléphone et envoie le CSV. */
     private fun exporter() {
-        stats.text = "Préparation du fichier…"
-        executor.execute {
-            val fichier = Historique.get(this).exporterCsv(this)
-            val uri = FileProvider.getUriForFile(this, "$packageName.fichiers", fichier)
-            val envoi = Intent(Intent.ACTION_SEND).apply {
-                type = "text/csv"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Historique du pouls")
-                clipData = ClipData.newRawUri("pouls.csv", uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            runOnUiThread {
-                if (envoi.resolveActivity(packageManager) == null) {
-                    stats.text = "Aucun moyen d'envoi trouvé sur la montre"
-                } else {
-                    startActivity(Intent.createChooser(envoi, "Envoyer l'historique"))
-                    charger()
-                }
+        if (Build.VERSION.SDK_INT >= 31 &&
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 1)
+            return
+        }
+        val bt = getSystemService(BluetoothManager::class.java)?.adapter
+        if (bt == null || !bt.isEnabled) {
+            stats.text = "Bluetooth désactivé"
+            return
+        }
+        val appareils = try { bt.bondedDevices.toList() } catch (e: SecurityException) { emptyList() }
+        // Les téléphones d'abord ; s'il n'y en a qu'un, pas besoin de demander.
+        val telephones = appareils.filter {
+            runCatching { it.bluetoothClass?.majorDeviceClass == BluetoothClass.Device.Major.PHONE }.getOrDefault(false)
+        }
+        when {
+            telephones.size == 1 -> envoyer(telephones[0])
+            appareils.isEmpty() -> stats.text = "Aucun appareil Bluetooth associé"
+            else -> {
+                val liste = telephones.ifEmpty { appareils }
+                val noms = liste.map { runCatching { it.name }.getOrNull() ?: it.address }.toTypedArray()
+                AlertDialog.Builder(this)
+                    .setTitle("Envoyer à")
+                    .setItems(noms) { _, i -> envoyer(liste[i]) }
+                    .show()
             }
         }
+    }
+
+    private fun envoyer(appareil: BluetoothDevice) {
+        val nomAppareil = runCatching { appareil.name }.getOrNull() ?: appareil.address
+        stats.text = "Connexion à $nomAppareil…"
+        executor.execute {
+            val message = try {
+                val fichier = Historique.get(this).exporterCsv(this)
+                val nom = "pouls-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".csv"
+                runOnUiThread { stats.text = "Acceptez le fichier sur le téléphone…" }
+                EnvoiBluetooth.envoyer(appareil, fichier, nom) { part ->
+                    runOnUiThread { stats.text = "Envoi : %d %%".format((part * 100).toInt()) }
+                }
+                "Fichier $nom envoyé à $nomAppareil"
+            } catch (e: EnvoiBluetooth.Refus) {
+                "Le téléphone a refusé le fichier"
+            } catch (e: Exception) {
+                "Échec de l'envoi : ${e.message ?: e.javaClass.simpleName}"
+            }
+            runOnUiThread { stats.text = message }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (grantResults.any { it == PackageManager.PERMISSION_GRANTED }) exporter()
+        else stats.text = "Accès Bluetooth refusé"
     }
 }
