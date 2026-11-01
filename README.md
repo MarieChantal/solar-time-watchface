@@ -75,7 +75,7 @@ Toutes les 5 minutes, la complication allume le capteur cardiaque (`Sensor.TYPE_
 
 Chaque mesure est enregistrée sur la montre (instant et valeur, dans une base SQLite locale). Le bouton **Historique** de l'appli Pouls affiche la courbe sur 24 heures, 7 jours ou 30 jours (touchez la courbe pour changer de période), avec le minimum, la moyenne et le maximum. Une mesure prend environ 30 octets, soit 9 Ko par jour et 3 Mo par an : la place ne manque jamais, et tout est conservé.
 
-**Envoyer au téléphone** écrit l'historique complet en CSV (`date,timestamp_ms,bpm`) et ouvre le partage Android de la montre. Choisissez-y Bluetooth pour l'envoyer au téléphone. Le fichier est aussi récupérable par adb dans le cache de l'appli.
+**Envoyer au téléphone** écrit l'historique complet en CSV (`date,timestamp_ms,bpm`) et l'envoie par Bluetooth au téléphone associé, avec le profil OPP, comme « Partager par Bluetooth » sur Android. Aucune appli n'est nécessaire sur le téléphone : il demande d'accepter le fichier et le range dans ses téléchargements. Si plusieurs appareils sont associés, l'appli demande lequel choisir.
 
 ### Glycémie
 
