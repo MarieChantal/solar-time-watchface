@@ -1,0 +1,96 @@
+# Cadran solaire pour Wear OS
+
+Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, la **glycémie** (via [Juggluco](https://github.com/j-kaltes/Juggluco)) et la **fréquence cardiaque**, sans compte Google ni Samsung et sans téléphone.
+
+![Aperçu du cadran](cadran/src/main/res/drawable-nodpi/preview.png)
+
+- **En haut** : l'heure solaire vraie, en 24 h. Il est 12:00 quand le soleil passe au plus haut à l'endroit où vous êtes.
+- **En bas** : la glycémie et sa tendance, fournies par Juggluco (par exemple avec un FreeStyle Libre 2 connecté directement à la montre).
+- **À 9 h** : la fréquence cardiaque, mesurée toutes les 5 minutes.
+- **À 3 h** : la date, dans un guichet.
+- Une trotteuse rouge, masquée quand l'écran est en veille.
+
+Conçu sur une Galaxy Watch4 Classic (SM-R885F) sans Samsung Health ni Play Store. Il devrait fonctionner sur toute montre Wear OS 4 ou plus récente.
+
+## Les trois APK
+
+| APK | Paquet | Rôle |
+|---|---|---|
+| `heuresolaire.apk` | `io.github.mariechantal.heuresolaire` | Appli et complication « Heure solaire ». Elle calcule l'écart entre l'heure solaire et l'heure légale. |
+| `pouls.apk` | `io.github.mariechantal.pouls` | Appli et complication « Fréquence cardiaque ». Elle lit directement le capteur de la montre, sans Samsung Health ni Health Services. |
+| `cadran-solaire.apk` | `io.github.mariechantal.cadransolaire` | Le cadran, au format [Watch Face Format](https://developer.android.com/training/wearables/wff) v2. Il ne contient aucun code. |
+
+Chaque complication marche aussi sur d'autres cadrans, et le cadran accepte d'autres complications à la place des siennes.
+
+## Installation
+
+1. Téléchargez les APK sur la page [Releases](../../releases/tag/apk). Elle est mise à jour à chaque modification de la branche `main`.
+2. Installez-les sur la montre avec un outil ADB, par exemple GeminiMan WearOS Manager (« Sideload APK ») ou `adb install`. Installez `heuresolaire.apk` et `pouls.apk` d'abord, puis `cadran-solaire.apk`.
+3. Ouvrez **Heure solaire** sur la montre, acceptez la localisation et touchez « Mettre à jour la position », de préférence dehors.
+4. Ouvrez **Pouls** et touchez « Autoriser le capteur » deux fois : d'abord « Autoriser », puis « Toujours autoriser ». La complication lit le capteur en arrière-plan.
+5. Pour la glycémie, installez la version montre de Juggluco et configurez-la (connexion directe au capteur ou relais depuis le téléphone).
+6. Faites un appui long sur le cadran actuel et choisissez **Cadran solaire glycémie**.
+
+Les trois complications sont choisies automatiquement quand le cadran est ajouté. Sinon, faites un appui long sur le cadran, puis **Personnaliser** :
+- en haut, **Heure solaire** ;
+- en bas, **Juggluco**, complication « valeur + flèche » en texte court ;
+- à gauche, **Pouls → Fréquence cardiaque**.
+
+> **Mise à jour** : les APK de la CI sont signés avec une clé de debug qui change à chaque compilation. Pour installer une nouvelle version, désinstallez d'abord l'ancienne :
+> `adb shell pm uninstall io.github.mariechantal.heuresolaire` (et de même pour `io.github.mariechantal.pouls` et `io.github.mariechantal.cadransolaire`).
+
+## Fonctionnement
+
+### Heure solaire
+
+```
+heure solaire = UTC + longitude × 4 min + équation du temps
+```
+
+L'équation du temps vient de la formule de la NOAA (précision d'environ 30 s). Par exemple, à Rennes (longitude −1,68°) le 1er novembre, l'équation du temps vaut +16,4 min : le midi solaire tombe donc à 12:50 heure légale.
+
+La complication transmet seulement l'**écart en minutes** (type `RANGED_VALUE`). Le cadran ajoute cet écart à l'heure courante. L'heure solaire avance ainsi chaque minute sans réveiller l'appli, qui ne recalcule l'écart qu'une fois par heure ou lors d'un changement d'heure ou de fuseau.
+
+**GPS et batterie** : le GPS n'est utilisé que lorsque vous ouvrez l'appli Heure solaire (ou que vous touchez l'heure solaire sur le cadran). En arrière-plan, l'appli lit seulement la dernière position connue du système. Un degré de longitude décale l'heure solaire de 4 minutes, donc il suffit de mettre la position à jour en voyage.
+
+### Fréquence cardiaque
+
+Toutes les 5 minutes, la complication allume le capteur cardiaque (`Sensor.TYPE_HEART_RATE`) jusqu'à obtenir une mesure fiable, en 20 s au plus, puis l'éteint. Elle ignore les lectures sans contact avec la peau ou peu fiables, comme le fait [OpenVitals](https://github.com/OpenVitals-MTU/android-app). Si aucune mesure ne date de moins de 30 minutes, elle affiche `--`. Touchez la valeur pour ouvrir l'appli Pouls et lancer une mesure.
+
+### Glycémie
+
+Le cadran choisit d'office la complication texte « valeur + flèche » de Juggluco (`ShortArrowValueDataSourceService`), et à défaut son image « valeur + flèche » (`ArrowDataSourceService`). C'est le même choix que dans le cadran fourni avec Juggluco.
+
+## Compiler
+
+### Avec GitHub Actions
+Chaque push lance le workflow [`build.yml`](.github/workflows/build.yml) : JDK 17, Gradle 8.10.2, puis `gradle assembleDebug`. Les APK apparaissent comme artefact de l'exécution, et ceux de `main` sont aussi publiés dans la release `apk`.
+
+### En local
+Avec Android Studio, ouvrez le dossier et lancez *Build → Build APK(s)*. Avec Gradle 8.10 et le SDK Android 35 installés, lancez `gradle assembleDebug`.
+
+### Images
+Le fond, les aiguilles et l'aperçu sont générés avec Pillow :
+```
+python3 outils/dessiner.py cadran/src/main/res/drawable-nodpi
+```
+
+## Arborescence
+
+```
+heuresolaire/   appli et complication Heure solaire (Kotlin)
+pouls/          appli et complication Fréquence cardiaque (Kotlin)
+cadran/         cadran Watch Face Format (res/raw/watchface.xml)
+outils/         génération des images
+```
+
+## Remerciements
+
+- [Juggluco](https://github.com/j-kaltes/Juggluco) de Jaap Korthals Altes, pour la glycémie et son cadran de référence.
+- [OpenVitals](https://github.com/OpenVitals-MTU/android-app), pour la façon de lire le capteur cardiaque.
+
+## Licence
+
+Ce projet est distribué sous la licence [GNU GPL v3](LICENSE) (GPL-3.0-or-later).
+
+Ce projet ne remplace pas un dispositif médical. Ne prenez aucune décision de traitement sur la seule base de l'affichage du cadran.

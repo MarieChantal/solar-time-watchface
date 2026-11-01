@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cadran analogique : heure solaire en haut, glycémie (Juggluco) en bas, fréquence cardiaque à 9 h, date à 3 h.
+  Le haut attend la complication « Heure solaire » (appli io.github.mariechantal.heuresolaire) en RANGED_VALUE :
+  sa valeur est le décalage en minutes entre heure solaire et heure légale, ajouté ici à l'heure courante.
+-->
+<WatchFace width="450" height="450">
+  <Metadata key="CLOCK_TYPE" value="ANALOG" />
+  <Metadata key="PREVIEW_TIME" value="10:08:32" />
+
+  <Scene backgroundColor="#ff000000">
+    <PartImage x="0" y="0" width="450" height="450">
+      <Image resource="fond" />
+    </PartImage>
+
+    <!-- Date dans le guichet à 3 h -->
+    <PartText x="331" y="205" width="54" height="40">
+      <Text align="CENTER">
+        <Font family="SYNC_TO_DEVICE" size="26" weight="BOLD" color="#ff000000">
+          <Template>%s<Parameter expression="[DAY]" /></Template>
+        </Font>
+      </Text>
+    </PartText>
+
+    <!-- Haut : heure solaire -->
+    <ComplicationSlot slotId="0" x="115" y="98" width="220" height="80"
+        supportedTypes="RANGED_VALUE SHORT_TEXT" isCustomizable="TRUE">
+      <DefaultProviderPolicy defaultSystemProvider="EMPTY"
+          primaryProvider="io.github.mariechantal.heuresolaire/io.github.mariechantal.heuresolaire.SolarTimeService"
+          primaryProviderType="RANGED_VALUE" />
+      <BoundingBox x="0" y="0" width="220" height="80" />
+      <Complication type="RANGED_VALUE">
+        <PartText x="0" y="0" width="220" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffffc107">
+              <Template>SOL</Template>
+            </Font>
+          </Text>
+        </PartText>
+        <PartText x="0" y="22" width="220" height="56">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%d%d:%d%d<Parameter expression="floor((floor((((([HOUR_0_23] * 60 + [MINUTE] + [COMPLICATION.RANGED_VALUE_VALUE]) % 1440) + 1440) % 1440) / 60)) / 10)" /><Parameter expression="floor((floor((((([HOUR_0_23] * 60 + [MINUTE] + [COMPLICATION.RANGED_VALUE_VALUE]) % 1440) + 1440) % 1440) / 60)) % 10)" /><Parameter expression="floor((floor((((([HOUR_0_23] * 60 + [MINUTE] + [COMPLICATION.RANGED_VALUE_VALUE]) % 1440) + 1440) % 1440) % 60)) / 10)" /><Parameter expression="floor((floor((((([HOUR_0_23] * 60 + [MINUTE] + [COMPLICATION.RANGED_VALUE_VALUE]) % 1440) + 1440) % 1440) % 60)) % 10)" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+      </Complication>
+      <Complication type="SHORT_TEXT">
+        <PartText x="0" y="0" width="220" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffffc107">
+              <Template>%s<Parameter expression="[COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+        <PartText x="0" y="22" width="220" height="56">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+      </Complication>
+    </ComplicationSlot>
+
+    <!-- Bas : glycémie. Juggluco est choisi d'office (comme dans son cadran watchface3) :
+         texte court « valeur + flèche », sinon l'image « valeur + flèche » (SMALL_IMAGE). -->
+    <ComplicationSlot slotId="1" x="115" y="272" width="220" height="80"
+        supportedTypes="SHORT_TEXT SMALL_IMAGE RANGED_VALUE LONG_TEXT MONOCHROMATIC_IMAGE EMPTY" isCustomizable="TRUE">
+      <DefaultProviderPolicy
+          primaryProvider="tk.glucodata/tk.glucodata.glucosecomplication.ShortArrowValueDataSourceService"
+          primaryProviderType="SHORT_TEXT"
+          secondaryProvider="tk.glucodata/tk.glucodata.glucosecomplication.ArrowDataSourceService"
+          secondaryProviderType="SMALL_IMAGE"
+          defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" />
+      <BoundingBox x="0" y="0" width="220" height="80" />
+      <Complication type="SHORT_TEXT">
+        <Condition>
+          <Expressions>
+            <Expression name="image"><![CDATA[[COMPLICATION.MONOCHROMATIC_IMAGE] != null]]></Expression>
+          </Expressions>
+          <Compare expression="image">
+            <PartText x="0" y="8" width="150" height="64">
+          <Text align="END">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+            <PartImage x="156" y="10" width="60" height="60">
+              <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+            </PartImage>
+          </Compare>
+          <Default>
+            <PartText x="0" y="0" width="220" height="52">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+            <PartText x="0" y="52" width="220" height="26">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+              <Template>%s<Parameter expression="[COMPLICATION.TITLE] != null ? [COMPLICATION.TITLE] : &quot;&quot;" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+          </Default>
+        </Condition>
+      </Complication>
+      <Complication type="RANGED_VALUE">
+        <Condition>
+          <Expressions>
+            <Expression name="image"><![CDATA[[COMPLICATION.MONOCHROMATIC_IMAGE] != null]]></Expression>
+          </Expressions>
+          <Compare expression="image">
+            <PartText x="0" y="8" width="150" height="64">
+          <Text align="END">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+            <PartImage x="156" y="10" width="60" height="60">
+              <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+            </PartImage>
+          </Compare>
+          <Default>
+            <PartText x="0" y="0" width="220" height="52">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="46" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+            <PartText x="0" y="52" width="220" height="26">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+              <Template>%s<Parameter expression="[COMPLICATION.TITLE] != null ? [COMPLICATION.TITLE] : &quot;&quot;" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+          </Default>
+        </Condition>
+      </Complication>
+      <Complication type="SMALL_IMAGE">
+        <PartImage x="70" y="0" width="80" height="80">
+          <Image resource="[COMPLICATION.SMALL_IMAGE]" />
+        </PartImage>
+      </Complication>
+      <Complication type="MONOCHROMATIC_IMAGE">
+        <PartImage x="80" y="10" width="60" height="60">
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+        </PartImage>
+      </Complication>
+      <Complication type="LONG_TEXT">
+        <PartText x="0" y="10" width="220" height="60">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="30" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+      </Complication>
+      <Complication type="EMPTY" />
+    </ComplicationSlot>
+
+    <!-- Gauche (9 h) : fréquence cardiaque. Par défaut la complication « Fréquence cardiaque »
+         de l’appli Pouls (lecture directe du capteur), sinon celle du système. -->
+    <ComplicationSlot slotId="2" x="38" y="190" width="90" height="70"
+        supportedTypes="SHORT_TEXT RANGED_VALUE EMPTY" isCustomizable="TRUE">
+      <DefaultProviderPolicy
+          primaryProvider="io.github.mariechantal.pouls/io.github.mariechantal.pouls.HeartRateService"
+          primaryProviderType="SHORT_TEXT"
+          defaultSystemProvider="HEART_RATE" defaultSystemProviderType="SHORT_TEXT" />
+      <BoundingBox x="0" y="0" width="90" height="70" />
+      <Complication type="SHORT_TEXT">
+        <PartText x="0" y="0" width="90" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="20" color="#ffe6463c">
+              <Template>♥</Template>
+            </Font>
+          </Text>
+        </PartText>
+        <PartText x="0" y="24" width="90" height="44">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="34" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+      </Complication>
+      <Complication type="RANGED_VALUE">
+        <PartText x="0" y="0" width="90" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="20" color="#ffe6463c">
+              <Template>♥</Template>
+            </Font>
+          </Text>
+        </PartText>
+        <PartText x="0" y="24" width="90" height="44">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="34" weight="BOLD" color="#ffffffff">
+              <Template>%s<Parameter expression="[COMPLICATION.TEXT] != null ? [COMPLICATION.TEXT] : [COMPLICATION.TITLE]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+      </Complication>
+      <Complication type="EMPTY" />
+    </ComplicationSlot>
+
+    <!-- Aiguilles (pivot au centre 225,225) -->
+    <AnalogClock x="0" y="0" width="450" height="450">
+      <HourHand resource="aiguille_heure" x="215" y="102" width="20" height="140" pivotX="0.5" pivotY="0.88" />
+      <MinuteHand resource="aiguille_minute" x="217" y="38" width="16" height="205" pivotX="0.5" pivotY="0.91" />
+    </AnalogClock>
+    <Group name="trotteuse" x="0" y="0" width="450" height="450">
+      <!-- Pas de trotteuse en mode veille (écran toujours allumé) -->
+      <Variant mode="AMBIENT" target="alpha" value="0" />
+      <AnalogClock x="0" y="0" width="450" height="450">
+        <SecondHand resource="trotteuse" x="219" y="34" width="12" height="230" pivotX="0.5" pivotY="0.83" />
+      </AnalogClock>
+    </Group>
+  </Scene>
+</WatchFace>
