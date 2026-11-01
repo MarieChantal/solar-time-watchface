@@ -34,7 +34,7 @@ class HeartRateService : SuspendingComplicationDataSourceService() {
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         if (hasPermission(this)) {
-            measure()?.let { save(this, it) }
+            measure(this)?.let { save(this, it) }
         }
         val (bpm, at) = saved(this)
         val fresh = bpm != null && System.currentTimeMillis() - at < STALE_AFTER_MILLIS
@@ -62,37 +62,6 @@ class HeartRateService : SuspendingComplicationDataSourceService() {
         }
     }
 
-    /** Allume le capteur et rend la première mesure fiable, ou null au bout de 20 s. */
-    private suspend fun measure(): Int? {
-        val sm = getSystemService(SensorManager::class.java) ?: return null
-        val sensor = sm.getDefaultSensor(Sensor.TYPE_HEART_RATE) ?: return null
-        val startedAt = SystemClock.elapsedRealtimeNanos()
-        return withTimeoutOrNull(MEASURE_TIMEOUT_MILLIS) {
-            suspendCancellableCoroutine { cont ->
-                val listener = object : SensorEventListener {
-                    override fun onSensorChanged(event: SensorEvent) {
-                        // Ignore la valeur en cache d'avant l'allumage, l'absence de contact et les mesures douteuses.
-                        if (event.timestamp < startedAt) return
-                        if (event.accuracy == SensorManager.SENSOR_STATUS_NO_CONTACT ||
-                            event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) return
-                        val bpm = event.values.firstOrNull()?.toInt() ?: return
-                        if (bpm !in 30..230) return
-                        sm.unregisterListener(this)
-                        if (cont.isActive) cont.resume(bpm)
-                    }
-                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
-                }
-                val ok = try {
-                    sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
-                } catch (e: SecurityException) {
-                    Log.w(TAG, "Capteur cardiaque refusé", e)
-                    false
-                }
-                if (!ok) cont.resume(null) else cont.invokeOnCancellation { sm.unregisterListener(listener) }
-            }
-        }
-    }
-
     companion object {
         private const val TAG = "HeartRateService"
         private const val PREFS = "pouls"
@@ -107,9 +76,41 @@ class HeartRateService : SuspendingComplicationDataSourceService() {
             return (if (p.contains("bpm")) p.getInt("bpm", 0) else null) to p.getLong("at", 0L)
         }
 
-        private fun save(context: Context, bpm: Int) {
+        /** Allume le capteur et rend la première mesure fiable, ou null au bout de 20 s. */
+        suspend fun measure(context: Context): Int? {
+            val sm = context.getSystemService(SensorManager::class.java) ?: return null
+            val sensor = sm.getDefaultSensor(Sensor.TYPE_HEART_RATE) ?: return null
+            val startedAt = SystemClock.elapsedRealtimeNanos()
+            return withTimeoutOrNull(MEASURE_TIMEOUT_MILLIS) {
+                suspendCancellableCoroutine { cont ->
+                    val listener = object : SensorEventListener {
+                        override fun onSensorChanged(event: SensorEvent) {
+                            // Ignore la valeur en cache d'avant l'allumage, l'absence de contact et les mesures douteuses.
+                            if (event.timestamp < startedAt) return
+                            if (event.accuracy == SensorManager.SENSOR_STATUS_NO_CONTACT ||
+                                event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) return
+                            val bpm = event.values.firstOrNull()?.toInt() ?: return
+                            if (bpm !in 30..230) return
+                            sm.unregisterListener(this)
+                            if (cont.isActive) cont.resume(bpm)
+                        }
+                        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+                    }
+                    val ok = try {
+                        sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+                    } catch (e: SecurityException) {
+                        Log.w(TAG, "Capteur cardiaque refusé", e)
+                        false
+                    }
+                    if (!ok) cont.resume(null) else cont.invokeOnCancellation { sm.unregisterListener(listener) }
+                }
+            }
+        }
+
+        fun save(context: Context, bpm: Int) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putInt("bpm", bpm).putLong("at", System.currentTimeMillis()).apply()
+            Historique.get(context).ajouter(System.currentTimeMillis(), bpm)
         }
 
         fun tapIntent(context: Context): PendingIntent = PendingIntent.getActivity(

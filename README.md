@@ -73,6 +73,10 @@ Avec 8 h de sommeil, on se couche à 20:00 et on se lève à 04:00 en heure sola
 
 Toutes les 5 minutes, la complication allume le capteur cardiaque (`Sensor.TYPE_HEART_RATE`) jusqu'à obtenir une mesure fiable, en 20 s au plus, puis l'éteint. Elle ignore les lectures sans contact avec la peau ou peu fiables, comme le fait [OpenVitals](https://github.com/OpenVitals-MTU/android-app). Si aucune mesure ne date de moins de 30 minutes, elle affiche `--`. Touchez la valeur pour ouvrir l'appli Pouls et lancer une mesure.
 
+Chaque mesure est enregistrée sur la montre (instant et valeur, dans une base SQLite locale). Le bouton **Historique** de l'appli Pouls affiche la courbe sur 24 heures, 7 jours ou 30 jours (touchez la courbe pour changer de période), avec le minimum, la moyenne et le maximum. Une mesure prend environ 30 octets, soit 9 Ko par jour et 3 Mo par an : la place ne manque jamais, et tout est conservé.
+
+**Envoyer au téléphone** écrit l'historique complet en CSV (`date,timestamp_ms,bpm`) et ouvre le partage Android de la montre. Choisissez-y Bluetooth pour l'envoyer au téléphone. Le fichier est aussi récupérable par adb dans le cache de l'appli.
+
 ### Glycémie
 
 Le cadran choisit d'office la complication texte « valeur + flèche » de Juggluco (`ShortArrowValueDataSourceService`), et à défaut son image « valeur + flèche » (`ArrowDataSourceService`). C'est le même choix que dans le cadran fourni avec Juggluco.

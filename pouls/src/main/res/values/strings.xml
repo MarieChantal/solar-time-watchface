@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">Pouls</string>
     <string name="complication_label">Fréquence cardiaque</string>
+    <string name="historique_label">Historique du pouls</string>
 </resources>
