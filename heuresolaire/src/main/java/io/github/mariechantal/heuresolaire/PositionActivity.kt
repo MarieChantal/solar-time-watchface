@@ -41,6 +41,12 @@ class PositionActivity : Activity() {
                 setPadding(32, 48, 32, 64)
                 addView(info)
                 addView(button)
+                addView(Button(this@PositionActivity).apply {
+                    text = "Réveil solaire"
+                    setOnClickListener {
+                        startActivity(android.content.Intent(this@PositionActivity, ReveilActivity::class.java))
+                    }
+                })
             })
         })
         refresh()
@@ -59,9 +65,22 @@ class PositionActivity : Activity() {
                 appendLine("Longitude %.3f°".format(lon))
                 appendLine("Décalage %+.1f min".format(SolarTime.offsetMinutes(lon)))
                 appendLine("Position du $updated")
+                appendLine(reveil(lon))
                 status?.let { appendLine(it) }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refresh()
+    }
+
+    private fun reveil(lon: Double): String {
+        val r = Reveil.reglages(this)
+        if (!r.actif) return "Réveil coupé"
+        val nuit = Reveil.prochaine(lon, r.heures) { it.lever }
+        return "Coucher ${Reveil.hhmm(nuit.coucher)}, lever ${Reveil.hhmm(nuit.lever)}"
     }
 
     private fun updatePosition() {
@@ -84,6 +103,7 @@ class PositionActivity : Activity() {
                     if (location != null) {
                         SolarTime.saveLongitude(this, location.longitude)
                         SolarTimeService.requestUpdate(this)
+                        Reveil.programmer(this)
                         refresh("Position mise à jour")
                     } else {
                         refresh("Pas de position, réessayez dehors")

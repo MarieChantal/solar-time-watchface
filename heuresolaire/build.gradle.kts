@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.mariechantal.heuresolaire"
         minSdk = 30
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
