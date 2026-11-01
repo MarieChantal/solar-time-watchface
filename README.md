@@ -1,6 +1,6 @@
 # Cadran solaire pour Wear OS
 
-Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, la **glycémie** (via [Juggluco](https://github.com/j-kaltes/Juggluco)) et la **fréquence cardiaque**, sans compte Google ni Samsung et sans téléphone.
+Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, la **glycémie** (via [Juggluco](https://github.com/j-kaltes/Juggluco)) la **fréquence cardiaque**, les **pas du jour** et la **batterie**, sans compte Google ni Samsung et sans téléphone.
 
 ![Aperçu du cadran](cadran/src/main/res/drawable-nodpi/preview.png)
 
@@ -8,6 +8,8 @@ Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, 
 - **En bas** : la glycémie et sa tendance, fournies par Juggluco (par exemple avec un FreeStyle Libre 2 connecté directement à la montre).
 - **À 9 h** : la fréquence cardiaque, mesurée toutes les 5 minutes.
 - **À 3 h** : la date, dans un guichet.
+- **Sous 12 h** : la batterie de la montre en %, en rouge à 15 % et moins.
+- **Au-dessus de 6 h** : les pas du jour.
 - Une trotteuse rouge, masquée quand l'écran est en veille.
 
 Les deux applis qui accompagnent le cadran ont aussi leurs propres fonctions :
@@ -38,10 +40,11 @@ Chaque complication marche aussi sur d'autres cadrans, et le cadran accepte d'au
 6. Faites un appui long sur le cadran actuel et choisissez **Cadran solaire glycémie**.
 7. Facultatif : dans **Heure solaire → Réveil solaire**, choisissez la durée de sommeil, activez le réveil et acceptez les notifications.
 
-Les trois complications sont choisies automatiquement quand le cadran est ajouté. Sinon, faites un appui long sur le cadran, puis **Personnaliser** :
+Les quatre complications sont choisies automatiquement quand le cadran est ajouté. Sinon, faites un appui long sur le cadran, puis **Personnaliser** :
 - en haut, **Heure solaire** ;
 - en bas, **Juggluco**, complication « valeur + flèche » en texte court ;
-- à gauche, **Pouls → Fréquence cardiaque**.
+- à gauche, **Pouls → Fréquence cardiaque** ;
+- en bas, sous la glycémie, le podomètre : celui du système par défaut, ou **Google Fit → Pas** pour avoir le même compte que dans Fit.
 
 > **Mise à jour** : les APK de la CI sont signés avec une clé de debug qui change à chaque compilation. Pour installer une nouvelle version, désinstallez d'abord l'ancienne :
 > `adb shell pm uninstall io.github.mariechantal.heuresolaire` (et de même pour `io.github.mariechantal.pouls` et `io.github.mariechantal.cadransolaire`).
@@ -86,6 +89,10 @@ Les mesures toutes les 5 minutes n'ont lieu que si la complication est affichée
 Chaque mesure est enregistrée sur la montre (instant et valeur, dans une base SQLite locale). Le bouton **Historique** de l'appli Pouls affiche la courbe sur 24 heures, 7 jours ou 30 jours (touchez la courbe pour changer de période), avec le minimum, la moyenne et le maximum. Une mesure prend environ 30 octets, soit 9 Ko par jour et 3 Mo par an : la place ne manque jamais, et tout est conservé.
 
 **Envoyer au téléphone** écrit l'historique complet en CSV (`date,timestamp_ms,bpm`) et l'envoie par Bluetooth au téléphone associé, avec le profil OPP, comme « Partager par Bluetooth » sur Android. Aucune appli n'est nécessaire sur le téléphone : il demande d'accepter le fichier et le range dans ses téléchargements. Si plusieurs appareils sont associés, l'appli demande lequel choisir.
+
+### Batterie et pas
+
+La batterie vient directement du cadran (`[BATTERY_PERCENT]` du Watch Face Format) : rien à configurer. Les pas sont une complication : le podomètre du système par défaut, ou celui de Google Fit si vous le choisissez dans l'éditeur. Si la source fournit son propre libellé (« Pas » chez Google Fit), il est affiché à la place de « pas ».
 
 ### Glycémie
 

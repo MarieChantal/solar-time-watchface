@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Cadran analogique : heure solaire en haut, glycémie (Juggluco) en bas, fréquence cardiaque à 9 h, date à 3 h.
+  Cadran analogique : heure solaire en haut, glycémie (Juggluco) en bas, fréquence cardiaque à 9 h, date à 3 h,
+  batterie sous 12 h, pas du jour au-dessus de 6 h.
   Le haut attend la complication « Heure solaire » (appli io.github.mariechantal.heuresolaire) en RANGED_VALUE :
   sa valeur est le décalage en minutes entre heure solaire et heure légale, ajouté ici à l'heure courante.
 -->
@@ -206,6 +207,94 @@
             </Font>
           </Text>
         </PartText>
+      </Complication>
+      <Complication type="EMPTY" />
+    </ComplicationSlot>
+
+    <!-- Haut (sous 12 h) : batterie de la montre, en rouge à 15 % et moins. -->
+    <Group name="batterie" x="165" y="68" width="120" height="24">
+      <Condition>
+        <Expressions>
+          <Expression name="faible"><![CDATA[[BATTERY_PERCENT] <= 15]]></Expression>
+        </Expressions>
+        <Compare expression="faible">
+        <PartText x="0" y="0" width="120" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffe6463c">
+              <Template>%s %%<Parameter expression="[BATTERY_PERCENT]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+        </Compare>
+        <Default>
+        <PartText x="0" y="0" width="120" height="24">
+          <Text align="CENTER">
+            <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+              <Template>%s %%<Parameter expression="[BATTERY_PERCENT]" /></Template>
+            </Font>
+          </Text>
+        </PartText>
+        </Default>
+      </Condition>
+    </Group>
+
+    <!-- Bas (au-dessus de 6 h) : pas du jour. Par défaut le podomètre du système ;
+         choisir « Pas » de Google Fit dans l'éditeur pour avoir le même compte que Fit. -->
+    <ComplicationSlot slotId="3" x="135" y="358" width="180" height="30"
+        supportedTypes="SHORT_TEXT RANGED_VALUE EMPTY" isCustomizable="TRUE">
+      <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="SHORT_TEXT" />
+      <BoundingBox x="0" y="0" width="180" height="30" />
+      <Complication type="SHORT_TEXT">
+        <!-- Si la source donne son libellé (« Pas » chez Google Fit), on l'affiche ; sinon « pas ». -->
+        <Condition>
+          <Expressions>
+            <Expression name="titre"><![CDATA[[COMPLICATION.TITLE] != null]]></Expression>
+          </Expressions>
+          <Compare expression="titre">
+            <PartText x="0" y="0" width="180" height="30">
+              <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+                  <Template>%s %s<Parameter expression="[COMPLICATION.TEXT]" /><Parameter expression="[COMPLICATION.TITLE]" /></Template>
+                </Font>
+              </Text>
+            </PartText>
+          </Compare>
+          <Default>
+            <PartText x="0" y="0" width="180" height="30">
+              <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+                  <Template>%s pas<Parameter expression="[COMPLICATION.TEXT]" /></Template>
+                </Font>
+              </Text>
+            </PartText>
+          </Default>
+        </Condition>
+      </Complication>
+      <Complication type="RANGED_VALUE">
+        <!-- Si la source donne son libellé (« Pas » chez Google Fit), on l'affiche ; sinon « pas ». -->
+        <Condition>
+          <Expressions>
+            <Expression name="titre"><![CDATA[[COMPLICATION.TITLE] != null]]></Expression>
+          </Expressions>
+          <Compare expression="titre">
+            <PartText x="0" y="0" width="180" height="30">
+              <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+                  <Template>%s %s<Parameter expression="[COMPLICATION.TEXT]" /><Parameter expression="[COMPLICATION.TITLE]" /></Template>
+                </Font>
+              </Text>
+            </PartText>
+          </Compare>
+          <Default>
+            <PartText x="0" y="0" width="180" height="30">
+              <Text align="CENTER">
+                <Font family="SYNC_TO_DEVICE" size="18" color="#ffc8c8c8">
+                  <Template>%s pas<Parameter expression="[COMPLICATION.TEXT]" /></Template>
+                </Font>
+              </Text>
+            </PartText>
+          </Default>
+        </Condition>
       </Complication>
       <Complication type="EMPTY" />
     </ComplicationSlot>
