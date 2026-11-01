@@ -12,6 +12,9 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import java.text.DateFormat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 
 /**
@@ -77,9 +80,24 @@ class PoulsActivity : Activity() {
                 requestPermissions(arrayOf(Manifest.permission.BODY_SENSORS), 1)
             needsBackground() ->
                 requestPermissions(arrayOf(Manifest.permission.BODY_SENSORS_BACKGROUND), 2)
-            else -> {
-                HeartRateService.requestUpdate(this)
-                refresh("Mesure demandée, le cadran se met à jour dans quelques secondes")
+            else -> mesurerMaintenant()
+        }
+    }
+
+    /**
+     * Mesure directement depuis l'appli : le bouton marche même si la complication n'est sur
+     * aucun cadran (par exemple après une réinstallation, qui la retire du cadran).
+     */
+    private fun mesurerMaintenant() {
+        button.isEnabled = false
+        refresh("Mesure en cours, gardez la montre au poignet…")
+        CoroutineScope(Dispatchers.Default).launch {
+            val bpm = HeartRateService.measure(this@PoulsActivity)
+            if (bpm != null) HeartRateService.save(this@PoulsActivity, bpm)
+            HeartRateService.requestUpdate(this@PoulsActivity)
+            runOnUiThread {
+                button.isEnabled = true
+                refresh(if (bpm != null) "Mesure enregistrée" else "Pas de mesure fiable, réessayez")
             }
         }
     }
