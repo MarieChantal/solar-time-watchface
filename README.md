@@ -10,13 +10,15 @@ Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, 
 - **À 3 h** : la date, dans un guichet.
 - Une trotteuse rouge, masquée quand l'écran est en veille.
 
+L'appli Heure solaire contient aussi un **réveil solaire** : vous choisissez la durée de sommeil, et le coucher et le lever sont placés de part et d'autre du minuit solaire.
+
 Conçu sur une Galaxy Watch4 Classic (SM-R885F) sans Samsung Health ni Play Store. Il devrait fonctionner sur toute montre Wear OS 4 ou plus récente.
 
 ## Les trois APK
 
 | APK | Paquet | Rôle |
 |---|---|---|
-| `heuresolaire.apk` | `io.github.mariechantal.heuresolaire` | Appli et complication « Heure solaire ». Elle calcule l'écart entre l'heure solaire et l'heure légale. |
+| `heuresolaire.apk` | `io.github.mariechantal.heuresolaire` | Appli et complication « Heure solaire ». Elle calcule l'écart entre l'heure solaire et l'heure légale, et fait réveil solaire. |
 | `pouls.apk` | `io.github.mariechantal.pouls` | Appli et complication « Fréquence cardiaque ». Elle lit directement le capteur de la montre, sans Samsung Health ni Health Services. |
 | `cadran-solaire.apk` | `io.github.mariechantal.cadransolaire` | Le cadran, au format [Watch Face Format](https://developer.android.com/training/wearables/wff) v2. Il ne contient aucun code. |
 
@@ -52,6 +54,20 @@ L'équation du temps vient de la formule de la NOAA (précision d'environ 30 s).
 La complication transmet seulement l'**écart en minutes** (type `RANGED_VALUE`). Le cadran ajoute cet écart à l'heure courante. L'heure solaire avance ainsi chaque minute sans réveiller l'appli, qui ne recalcule l'écart qu'une fois par heure ou lors d'un changement d'heure ou de fuseau.
 
 **GPS et batterie** : le GPS n'est utilisé que lorsque vous ouvrez l'appli Heure solaire (ou que vous touchez l'heure solaire sur le cadran). En arrière-plan, l'appli lit seulement la dernière position connue du système. Un degré de longitude décale l'heure solaire de 4 minutes, donc il suffit de mettre la position à jour en voyage.
+
+### Réveil solaire
+
+Dans l'appli Heure solaire, touchez « Réveil solaire » et choisissez la durée de sommeil (de 4 h à 12 h, par demi-heure). La nuit est centrée sur le minuit solaire :
+
+```
+coucher = minuit solaire − durée / 2        lever = minuit solaire + durée / 2
+```
+
+Avec 8 h de sommeil, on se couche à 20:00 et on se lève à 04:00 en heure solaire, soit 20:50 et 04:50 en heure légale à Rennes en novembre, ou 22:07 et 06:07 en juillet.
+
+- Une vibration et une notification préviennent 15 minutes avant le coucher.
+- Au lever, la montre sonne et/ou vibre (deux réglages indépendants) jusqu'à ce que vous touchiez « Je suis debout ». Il n'y a pas de répétition. La sonnerie s'arrête d'elle-même au bout de 10 minutes.
+- Le réveil sonne tous les jours. Les horaires se recalculent chaque jour, au changement d'heure et quand la position change.
 
 ### Fréquence cardiaque
 
