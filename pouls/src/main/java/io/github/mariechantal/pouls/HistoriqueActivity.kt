@@ -19,18 +19,19 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 /**
- * Historique de la fréquence cardiaque : courbe sur 24 h, 7 jours ou 30 jours (toucher la courbe
+ * Historique de la fréquence cardiaque : courbe sur 1 h, 24 h, 7 jours ou 30 jours (toucher la courbe
  * pour changer de période), minimum, maximum et moyenne, et envoi du CSV au téléphone par Bluetooth.
  */
 class HistoriqueActivity : Activity() {
 
     private enum class Periode(val libelle: String, val millis: Long) {
+        HEURE("1 heure", 3_600_000L),
         JOUR("24 heures", 24 * 3_600_000L),
         SEMAINE("7 jours", 7 * 24 * 3_600_000L),
         MOIS("30 jours", 30 * 24 * 3_600_000L),
     }
 
-    private var periode = Periode.JOUR
+    private var periode = Periode.HEURE
     private lateinit var titre: TextView
     private lateinit var courbe: CourbeView
     private lateinit var stats: TextView

@@ -8,6 +8,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
+    <!-- Mode sport : mesure toutes les 30 s dans un service au premier plan -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:icon="@drawable/ic_coeur"
@@ -31,6 +36,11 @@
             android:name=".HistoriqueActivity"
             android:exported="false"
             android:label="@string/historique_label" />
+
+        <service
+            android:name=".SportService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
 
         <service
             android:name=".HeartRateService"
