@@ -26,11 +26,17 @@ class PoulsActivity : Activity() {
 
     private lateinit var info: TextView
     private lateinit var button: Button
+    private lateinit var sport: Button
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val rafraichir = object : Runnable {
+        override fun run() { refresh(); handler.postDelayed(this, 15_000) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         info = TextView(this).apply { gravity = Gravity.CENTER; textSize = 14f }
         button = Button(this).apply { setOnClickListener { request() } }
+        sport = Button(this).apply { setOnClickListener { basculerSport() } }
         setContentView(ScrollView(this).apply {
             isFillViewport = true
             addView(LinearLayout(this@PoulsActivity).apply {
@@ -39,6 +45,7 @@ class PoulsActivity : Activity() {
                 setPadding(32, 48, 32, 64)
                 addView(info)
                 addView(button)
+                addView(sport)
                 addView(Button(this@PoulsActivity).apply {
                     text = "Historique"
                     setOnClickListener {
@@ -51,7 +58,30 @@ class PoulsActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        refresh()
+        handler.post(rafraichir)
+    }
+
+    override fun onPause() {
+        handler.removeCallbacks(rafraichir)
+        super.onPause()
+    }
+
+    /** Mode sport : une mesure toutes les 30 s pendant 1 h au plus ; un second appui l'arrête. */
+    private fun basculerSport() {
+        if (SportService.actif(this)) {
+            SportService.arreter(this)
+            refresh("Retour à une mesure toutes les 5 min")
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // La notification permet d'arrêter la séance sans rouvrir l'appli ; on démarre quand même si refusée.
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 3)
+            return
+        }
+        SportService.demarrer(this)
+        handler.postDelayed({ refresh("Mesure toutes les 30 s pendant 1 h") }, 300)
     }
 
     private fun needsBackground(): Boolean = Build.VERSION.SDK_INT >= 33 &&
@@ -65,6 +95,8 @@ class PoulsActivity : Activity() {
             when {
                 !HeartRateService.hasPermission(this@PoulsActivity) -> appendLine("Accès au capteur : non autorisé")
                 needsBackground() -> appendLine("Accès au capteur : à autoriser « tout le temps »")
+                SportService.actif(this@PoulsActivity) -> appendLine("Mesure toutes les 30 s, jusqu'à " +
+                    DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(SportService.fin(this@PoulsActivity)!!)))
                 else -> appendLine("Mesure toutes les 5 min")
             }
             status?.let { appendLine(it) }
@@ -72,6 +104,8 @@ class PoulsActivity : Activity() {
         val ready = HeartRateService.hasPermission(this) && !needsBackground()
         button.text = if (ready) "Mesurer maintenant" else "Autoriser le capteur"
         button.visibility = View.VISIBLE
+        sport.visibility = if (ready) View.VISIBLE else View.GONE
+        sport.text = if (SportService.actif(this)) "Arrêter la mesure à 30 s" else "Mesure à 30 s"
     }
 
     private fun request() {
@@ -104,6 +138,11 @@ class PoulsActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 3) {
+            SportService.demarrer(this)
+            handler.postDelayed({ refresh("Mesure toutes les 30 s pendant 1 h") }, 300)
+            return
+        }
         if (grantResults.any { it == PackageManager.PERMISSION_GRANTED }) request()
         else refresh("Autorisation refusée")
     }

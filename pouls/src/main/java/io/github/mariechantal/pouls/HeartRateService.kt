@@ -33,7 +33,8 @@ import kotlin.coroutines.resume
 class HeartRateService : SuspendingComplicationDataSourceService() {
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
-        if (hasPermission(this)) {
+        // En mode sport, le capteur est déjà allumé et enregistre toutes les 30 s.
+        if (hasPermission(this) && !SportService.actif(this)) {
             measure(this)?.let { save(this, it) }
         }
         val (bpm, at) = saved(this)

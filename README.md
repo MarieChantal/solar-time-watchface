@@ -14,7 +14,7 @@ Un cadran analogique pour montre Wear OS qui affiche l'**heure solaire vraie**, 
 
 Les deux applis qui accompagnent le cadran ont aussi leurs propres fonctions :
 - **Heure solaire** : un **réveil solaire**. Vous choisissez la durée de sommeil, et le coucher et le lever sont placés de part et d'autre du minuit solaire, avec un rappel 15 minutes avant le coucher.
-- **Pouls** : un **historique** de toutes les mesures, avec une courbe sur 24 h, 7 jours ou 30 jours, et l'**envoi en CSV au téléphone par Bluetooth**, sans appli sur le téléphone.
+- **Pouls** : un **historique** de toutes les mesures, avec une courbe sur 1 h, 24 h, 7 jours ou 30 jours, et l'**envoi en CSV au téléphone par Bluetooth**, sans appli sur le téléphone.
 
 Tout reste sur la montre : aucun compte, aucun serveur.
 
@@ -84,9 +84,13 @@ Toutes les 5 minutes, la complication allume le capteur cardiaque (`Sensor.TYPE_
 
 Les mesures toutes les 5 minutes n'ont lieu que si la complication est affichée sur un cadran actif.
 
+### Mesure à 30 s (séance de sport)
+
+Le bouton **Mesure à 30 s** de l'appli Pouls garde le capteur allumé et enregistre une mesure toutes les 30 secondes, au lieu d'une toutes les 5 minutes. Un second appui, ou le bouton « Arrêter » de la notification, revient au rythme normal. Le mode s'arrête de lui-même au bout d'une heure. Pendant ce temps, le cadran affiche la valeur à chaque nouvelle mesure, et la vue « 1 heure » de l'historique montre toute la séance.
+
 ### Historique du pouls
 
-Chaque mesure est enregistrée sur la montre (instant et valeur, dans une base SQLite locale). Le bouton **Historique** de l'appli Pouls affiche la courbe sur 24 heures, 7 jours ou 30 jours (touchez la courbe pour changer de période), avec le minimum, la moyenne et le maximum. Une mesure prend environ 30 octets, soit 9 Ko par jour et 3 Mo par an : la place ne manque jamais, et tout est conservé.
+Chaque mesure est enregistrée sur la montre (instant et valeur, dans une base SQLite locale). Le bouton **Historique** de l'appli Pouls affiche la courbe sur 1 heure, 24 heures, 7 jours ou 30 jours (touchez la courbe pour changer de période), avec le minimum, la moyenne et le maximum. Une mesure prend environ 30 octets, soit 9 Ko par jour et 3 Mo par an : la place ne manque jamais, et tout est conservé.
 
 **Envoyer au téléphone** écrit l'historique complet en CSV (`date,timestamp_ms,bpm`) et l'envoie par Bluetooth au téléphone associé, avec le profil OPP, comme « Partager par Bluetooth » sur Android. Aucune appli n'est nécessaire sur le téléphone : il demande d'accepter le fichier et le range dans ses téléchargements. Si plusieurs appareils sont associés, l'appli demande lequel choisir.
 
@@ -106,6 +110,7 @@ Le cadran choisit d'office la complication texte « valeur + flèche » de Juggl
 | Heure solaire | Alarmes exactes, démarrage, vibreur, notifications | Réveil solaire et rappel du coucher. |
 | Pouls | Capteurs corporels, y compris en arrière-plan | Mesurer la fréquence cardiaque pour la complication. |
 | Pouls | Appareils Bluetooth à proximité | Envoyer l'historique au téléphone. |
+| Pouls | Service au premier plan, maintien en éveil, notifications | Mesure à 30 s pendant une séance de sport. |
 
 Aucune des deux applis n'a accès à Internet.
 
